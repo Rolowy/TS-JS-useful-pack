@@ -1,0 +1,31 @@
+import { Page } from 'puppeteer';
+
+export default async ({ page }: { page: Page }) => {
+  try {
+    await page.goto('https://reactjs.org/docs/react-api.html');
+    const apiContent = await page.evaluate(() => {
+      const article = document.querySelector('article');
+      return article ? article.innerHTML : '';
+    });
+
+    if (!apiContent) {
+      throw new Error('Nie udało się pobrać zawartości API z dokumentacji Reacta.');
+    }
+
+    await page.goto('https://raw.githubusercontent.com/simonlc/Markdown-CSS/master/markdown.css');
+    const stylesheet = await page.evaluate(() => document.body.innerText);
+
+    if (!stylesheet) {
+      throw new Error('Nie udało się pobrać stylów CSS.');
+    }
+
+    await page.goto('about:blank');
+    await page.setContent(apiContent);
+    await page.addStyleTag({ content: stylesheet });
+
+    return await page.pdf();
+  } catch (error) {
+    console.error('Wystąpił błąd:', error);
+    throw error;
+  }
+};
